@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuildMyTrip — Sri Lanka Travel Experiences</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --gold-dim: rgba(201,168,76,0.15);
+    --black: #080808;
+    --deep: #0D0D0D;
+    --surface: #141414;
+    --surface2: #1C1C1C;
+    --muted: rgba(255,255,255,0.45);
+    --text: rgba(255,255,255,0.92);
+    --border: rgba(201,168,76,0.2);
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR */
+  .cursor {
+    position: fixed; top: 0; left: 0;
+    width: 10px; height: 10px;
+    background: var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s, width 0.3s, height 0.3s, background 0.3s;
+  }
+  .cursor-ring {
+    position: fixed; top: 0; left: 0;
+    width: 36px; height: 36px;
+    border: 1px solid rgba(201,168,76,0.5);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.18s ease-out, width 0.3s, height 0.3s, opacity 0.3s;
+  }
+  body:hover .cursor-ring { opacity: 1; }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 500;
+    padding: 28px 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(8,8,8,0.95) 0%, transparent 100%);
+    transition: padding 0.4s;
+  }
+  nav.scrolled {
+    padding: 18px 60px;
+    background: rgba(8,8,8,0.97);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+  }
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #fff;
+    text-decoration: none;
+  }
+  .nav-logo span {
+    font-style: italic;
+    color: var(--gold);
+    font-weight: 300;
+  }
+  .nav-links { display: flex; gap: 40px; list-style: none; }
+  .nav-links a {
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-cta {
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--black);
+    background: var(--gold);
+    padding: 10px 26px;
+    text-decoration: none;
+    transition: background 0.3s;
+  }
+  .nav-cta:hover { background: var(--gold-light); }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    height: 100vh;
+    min-height: 700px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    overflow: hidden;
+  }
+  .hero-bg img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transform: scale(1.04);
+    animation: heroZoom 10s ease-out forwards;
+  }
+  .hero-bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(to bottom, rgba(8,8,8,0.72) 0%, rgba(8,8,8,0.08) 30%, rgba(8,8,8,0.0) 55%, rgba(8,8,8,0.55) 80%, rgba(8,8,8,0.95) 100%),
+      linear-gradient(to right, rgba(8,8,8,0.78) 0%, rgba(8,8,8,0.2) 50%, transparent 100%);
+    z-index: 1;
+  }
+  .hero-content { z-index: 2; }
+
+  @keyframes heroZoom {
+    from { transform: scale(1.05); }
+    to { transform: scale(1.0); }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 0 60px;
+    padding-top: 60px;
+    max-width: 900px;
+    width: 100%;
+    opacity: 0;
+    animation: heroFadeUp 1.2s ease-out 0.4s forwards;
+  }
+  @keyframes heroFadeUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .hero-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: block;
+    width: 40px; height: 1px;
+    background: var(--gold);
+  }
+
+  /* BIG dramatic typography */
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    line-height: 1.0;
+    margin-bottom: 0;
+  }
+  .hero-title .line-small {
+    font-size: clamp(16px, 2vw, 26px);
+    font-weight: 400;
+    color: rgba(255,255,255,0.6);
+    display: block;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-family: 'DM Sans', sans-serif;
+    margin-bottom: 10px;
+  }
+  .hero-title .line-big {
+    font-size: clamp(88px, 12vw, 160px);
+    font-weight: 600;
+    color: #fff;
+    display: block;
+    line-height: 0.88;
+    margin-bottom: 0px;
+    letter-spacing: -0.03em;
+    text-shadow: 0 4px 40px rgba(0,0,0,0.5);
+  }
+  .hero-title .line-italic {
+    font-size: clamp(66px, 9vw, 128px);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--gold);
+    display: block;
+    line-height: 1.0;
+    margin-bottom: 0px;
+    letter-spacing: -0.01em;
+    text-shadow: 0 4px 40px rgba(0,0,0,0.4);
+  }
+  .hero-title .line-outline {
+    font-size: clamp(88px, 12vw, 160px);
+    font-weight: 700;
+    color: transparent;
+    -webkit-text-stroke: 2px rgba(255,255,255,0.55);
+    display: block;
+    line-height: 0.88;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-bottom {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-top: 48px;
+    gap: 40px;
+  }
+  .hero-subtitle {
+    font-size: 14px;
+    line-height: 1.9;
+    color: rgba(255,255,255,0.5);
+    max-width: 360px;
+  }
+  .hero-actions { display: flex; align-items: center; gap: 20px; flex-direction: column; align-items: flex-start; }
+  .btn-primary {
+    display: inline-block;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--black);
+    background: var(--gold);
+    padding: 16px 36px;
+    text-decoration: none;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--gold-light);
+    transform: translateX(-100%);
+    transition: transform 0.3s;
+  }
+  .btn-primary:hover::after { transform: translateX(0); }
+  .btn-primary span { position: relative; z-index: 1; }
+  .btn-ghost {
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    display: flex; align-items: center; gap: 10px;
+    transition: color 0.3s;
+  }
+  .btn-ghost:hover { color: var(--gold); }
+  .btn-ghost svg { transition: transform 0.3s; }
+  .btn-ghost:hover svg { transform: translateX(4px); }
+
+  .hero-scroll-hint {
+    position: absolute;
+    bottom: 40px; right: 60px;
+    display: flex; align-items: center; gap: 14px;
+    font-size: 11px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--muted);
+    opacity: 0;
+    animation: heroFadeUp 1s ease-out 1.4s forwards;
+  }
+  .scroll-line {
+    width: 50px; height: 1px;
+    background: var(--border);
+    position: relative; overflow: hidden;
+  }
+  .scroll-line::after {
+    content: '';
+    position: absolute; left: -100%; top: 0;
+    width: 100%; height: 100%;
+    background: var(--gold);
+    animation: scrollAnim 2s ease-in-out 1.5s infinite;
+  }
+  @keyframes scrollAnim {
+    0% { left: -100%; } 50% { left: 100%; } 100% { left: 100%; }
+  }
+
+  /* STATS BAR */
+  .stats-bar {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 32px 60px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    opacity: 0;
+    animation: heroFadeUp 0.8s ease-out 1s forwards;
+  }
+  .stat-item {
+    text-align: center;
+    padding: 0 20px;
+    border-right: 1px solid var(--border);
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 42px;
+    font-weight: 300;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-label {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* SECTION COMMONS */
+  section { padding: 100px 60px; }
+  .section-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(36px, 4vw, 58px);
+    font-weight: 300;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+  .section-title em { font-style: italic; color: var(--gold); }
+  .section-desc {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--muted);
+    max-width: 520px;
+  }
+
+  /* PACKAGES SECTION */
+  .packages { background: var(--deep); }
+  .packages-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 60px;
+  }
+  .packages-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+  .pkg-card {
+    position: relative;
+    overflow: hidden;
+    cursor: none;
+    aspect-ratio: 3/4;
+  }
+  .pkg-card-bg {
+    position: absolute; inset: 0;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .pkg-card:hover .pkg-card-bg { transform: scale(1.08); }
+  .pkg-card-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(8,8,8,0.95) 0%, rgba(8,8,8,0.2) 60%, transparent 100%);
+    transition: background 0.4s;
+  }
+  .pkg-card:hover .pkg-card-overlay {
+    background: linear-gradient(to top, rgba(8,8,8,0.98) 0%, rgba(8,8,8,0.4) 60%, rgba(8,8,8,0.1) 100%);
+  }
+  .pkg-card-content {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 32px;
+    transform: translateY(0);
+    transition: transform 0.4s;
+  }
+  .pkg-badge {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: var(--gold-dim);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    display: inline-block;
+    margin-bottom: 12px;
+  }
+  .pkg-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 300;
+    margin-bottom: 8px;
+    line-height: 1.1;
+  }
+  .pkg-loc {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .pkg-meta {
+    display: flex; gap: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    margin-top: 0;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: all 0.4s 0.05s;
+  }
+  .pkg-card:hover .pkg-meta { opacity: 1; transform: translateY(0); }
+  .pkg-meta-item { font-size: 12px; color: var(--muted); }
+  .pkg-meta-item strong { color: var(--text); font-weight: 400; display: block; margin-bottom: 2px; }
+  .pkg-price {
+    position: absolute;
+    top: 24px; right: 24px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--gold);
+    text-align: right;
+  }
+  .pkg-price small {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .pkg-card-large { grid-column: span 1; aspect-ratio: unset; }
+  .packages-grid .pkg-card:first-child { grid-row: span 2; aspect-ratio: unset; }
+
+  /* HOW IT WORKS */
+  .how { background: var(--black); }
+  .how-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+  .how-steps { display: flex; flex-direction: column; gap: 0; }
+  .how-step {
+    display: flex; gap: 28px;
+    padding: 32px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    position: relative;
+    transition: all 0.3s;
+  }
+  .how-step:hover { padding-left: 8px; }
+  .how-step:first-child { padding-top: 0; }
+  .how-step:last-child { border-bottom: none; }
+  .step-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-weight: 300;
+    color: rgba(201,168,76,0.15);
+    line-height: 1;
+    min-width: 52px;
+    transition: color 0.3s;
+  }
+  .how-step:hover .step-num { color: rgba(201,168,76,0.4); }
+  .step-content {}
+  .step-title {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    letter-spacing: 0.02em;
+  }
+  .step-desc { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+  .how-visual {
+    position: relative;
+    height: 560px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .how-visual-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    filter: brightness(0.7) saturate(0.8);
+    transition: filter 0.5s;
+  }
+  .how-visual:hover .how-visual-img { filter: brightness(0.8) saturate(1); }
+  .how-visual-caption {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 24px;
+    background: linear-gradient(to top, rgba(8,8,8,0.9), transparent);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--gold-light);
+  }
+  .visual-tag {
+    position: absolute;
+    top: 24px; left: 24px;
+    background: var(--gold);
+    color: var(--black);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+  }
+
+  /* DESTINATIONS PREVIEW */
+  .destinations { background: var(--surface); }
+  .dest-scroll-container {
+    display: flex; gap: 2px;
+    margin: 0 -60px;
+    padding: 0 60px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .dest-scroll-container::-webkit-scrollbar { display: none; }
+  .dest-card {
+    flex: 0 0 280px;
+    height: 400px;
+    position: relative;
+    overflow: hidden;
+    cursor: none;
+  }
+  .dest-card-bg {
+    position: absolute; inset: 0;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .dest-card:hover .dest-card-bg { transform: scale(1.1); }
+  .dest-card-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(8,8,8,0.85) 0%, transparent 60%);
+  }
+  .dest-card-info {
+    position: absolute; bottom: 24px; left: 24px; right: 24px;
+  }
+  .dest-card-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 300;
+    margin-bottom: 4px;
+  }
+  .dest-card-tag {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  /* TESTIMONIAL */
+  .testimonial {
+    background: var(--deep);
+    padding: 100px 60px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .testimonial::before {
+    content: '"';
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 400px;
+    font-weight: 300;
+    color: rgba(201,168,76,0.04);
+    position: absolute;
+    top: -80px; left: 50%;
+    transform: translateX(-50%);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+  .testimonial-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(24px, 3vw, 38px);
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.5;
+    max-width: 800px;
+    margin: 0 auto 32px;
+    position: relative;
+  }
+  .testimonial-author { font-size: 13px; letter-spacing: 0.15em; color: var(--gold); text-transform: uppercase; }
+
+  /* CTA SECTION */
+  .cta-section {
+    background: var(--black);
+    padding: 120px 60px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    border-top: 1px solid var(--border);
+  }
+  .cta-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(42px, 5vw, 72px);
+    font-weight: 300;
+    line-height: 1.0;
+  }
+  .cta-title em { font-style: italic; color: var(--gold); }
+  .cta-right {
+    display: flex; flex-direction: column; gap: 28px;
+  }
+  .cta-desc { font-size: 15px; line-height: 1.8; color: var(--muted); }
+  .cta-actions { display: flex; gap: 20px; flex-wrap: wrap; }
+
+  /* FOOTER */
+  footer {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 60px;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 40px;
+  }
+  .footer-brand {}
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 300;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+  .footer-tagline { font-size: 13px; color: var(--muted); line-height: 1.7; max-width: 240px; }
+  .footer-col-title {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+  }
+  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-links a {
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--text); }
+  .footer-bottom {
+    margin-top: 0;
+    padding: 24px 60px;
+    background: var(--surface);
+    border-top: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-bottom-text { font-size: 12px; color: rgba(255,255,255,0.25); }
+
+  /* SCROLL ANIMATIONS */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+  .fade-in-delay-1 { transition-delay: 0.1s; }
+  .fade-in-delay-2 { transition-delay: 0.2s; }
+  .fade-in-delay-3 { transition-delay: 0.3s; }
+
+  /* GOLD LINE ACCENT */
+  .gold-line {
+    width: 60px; height: 1px;
+    background: var(--gold);
+    margin: 24px 0;
+  }
+
+  /* FEATURE STRIP */
+  .feature-strip {
+    background: var(--gold);
+    padding: 20px 60px;
+    display: flex;
+    gap: 60px;
+    overflow: hidden;
+  }
+  .feature-strip-inner {
+    display: flex;
+    gap: 60px;
+    animation: marquee 20s linear infinite;
+    white-space: nowrap;
+  }
+  .feature-strip-item {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--black);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+  .feature-strip-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.3);
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* CUSTOMIZE TEASER */
+  .customize {
+    background: var(--black);
+    padding: 100px 60px;
+  }
+  .customize-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+  .customize-options { display: flex; flex-direction: column; gap: 12px; }
+  .option-group {
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 24px;
+    transition: border-color 0.3s;
+  }
+  .option-group:hover { border-color: var(--border); }
+  .option-group-title {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 14px;
+  }
+  .option-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    font-size: 12px;
+    padding: 6px 14px;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--muted);
+    cursor: none;
+    transition: all 0.2s;
+  }
+  .chip:hover, .chip.active {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: var(--gold-dim);
+  }
+  .customize-visual {
+    position: sticky;
+    top: 100px;
+  }
+  .price-calculator {
+    border: 1px solid var(--border);
+    padding: 36px;
+    background: var(--surface);
+  }
+  .calc-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 300;
+    margin-bottom: 6px;
+  }
+  .calc-subtitle { font-size: 12px; color: var(--muted); margin-bottom: 28px; }
+  .calc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 13px;
+  }
+  .calc-row:last-of-type { border-bottom: none; }
+  .calc-row-label { color: var(--muted); }
+  .calc-row-val { color: var(--text); }
+  .calc-total {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .calc-total-label {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .calc-total-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 42px;
+    font-weight: 300;
+    color: var(--gold);
+  }
+  .calc-total-price small {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="index.html" class="nav-logo">Build<span>My</span>trip</a>
+  <ul class="nav-links">
+    <li><a href="#packages">Packages</a></li>
+    <li><a href="destinations.html">Destinations</a></li>
+    <li><a href="package-builder.html">Build a Trip</a></li>
+    <li><a href="#">About</a></li>
+  </ul>
+  <a href="login.html" class="nav-cta">Login</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg">
+    <img src="assets/images/hero-bg.jpg" alt="Sri Lanka" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;">
+  </div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Discover Sri Lanka</div>
+    <h1 class="hero-title">
+      <span class="line-small">Experience the</span>
+      <span class="line-big">Pearl of</span>
+      <span class="line-italic">the Indian</span>
+      <span class="line-outline">Ocean</span>
+    </h1>
+    <div class="hero-bottom">
+      <p class="hero-subtitle">
+        Handcrafted Sri Lanka journeys. Pick your package, personalize every detail — we handle everything so you live every moment.
+      </p>
+      <div class="hero-actions">
+        <a href="#packages" class="btn-primary"><span>Explore Packages</span></a>
+        <a href="package-builder.html" class="btn-ghost">
+          Build Your Trip
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="hero-scroll-hint">
+    <span>Scroll to explore</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-num">6+</div>
+    <div class="stat-label">Curated Packages</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">24</div>
+    <div class="stat-label">Destinations</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">98%</div>
+    <div class="stat-label">Happy Travelers</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">5★</div>
+    <div class="stat-label">Rated Service</div>
+  </div>
+</div>
+
+<!-- FEATURE STRIP -->
+<div class="feature-strip">
+  <div class="feature-strip-inner">
+    <div class="feature-strip-item"><div class="feature-strip-dot"></div> Luxury Accommodations</div>
+    <div class="feature-strip-item"><div class="feature-strip-dot"></div> Flexible Day Plans</div>
+    <div class="feature-strip-item"><div class="feature-strip-dot"></div> Private Transfers</div>
+    <div class="feature-strip-item"><div class="feature-strip-dot"></div> Cultural Experiences</div>
+    <div class="feature-strip-item"><div class="feature-strip-dot"></div> Expert Local Guides</div>
+    <div class="feature-strip-item"><div class="feature-strip-dot"></div> Wildlife Safaris</div>
+    <div class="feature-strip-item"><div class="feature-strip-dot"></div> Beach Escapes</div>
+    <div class="feature-strip-item"><div class="feature-strip-dot"></div> Luxury Accommodations</div>
+    <div class="feature-strip-item"><div class="feature-strip-dot"></div> Flexible Day Plans</div>
+    <div class="feature-strip-item"><div class="feature-strip-dot"></div> Private Transfers</div>
+    <div class="feature-strip-item"><div class="feature-strip-dot"></div> Cultural Experiences</div>
+    <div class="feature-strip-item"><div class="feature-strip-dot"></div> Expert Local Guides</div>
+    <div class="feature-strip-item"><div class="feature-strip-dot"></div> Wildlife Safaris</div>
+    <div class="feature-strip-item"><div class="feature-strip-dot"></div> Beach Escapes</div>
+  </div>
+</div>
+
+<!-- PACKAGES -->
+<section class="packages fade-in" id="packages">
+  <div class="packages-header">
+    <div>
+      <div class="section-eyebrow">Our Collections</div>
+      <h2 class="section-title">Curated <em>journeys</em>,<br>your way</h2>
+    </div>
+    <p class="section-desc" style="max-width:340px;font-size:14px;">Five signature packages — each a different side of Sri Lanka. Click any package to see full details.</p>
+  </div>
+  <div class="packages-grid">
+
+    <div class="pkg-card" onclick="openPkgModal('cultural')">
+      <div class="pkg-card-bg" style="background-image: url('assets/images/packages/cultural-triangle.jpg');"></div>
+      <div class="pkg-card-overlay"></div>
+      <div class="pkg-price" style="background:rgba(8,8,8,0.7);padding:6px 12px;">from $480<small>per person</small></div>
+      <div class="pkg-card-content">
+        <div class="pkg-badge">Most Popular</div>
+        <div class="pkg-name">Cultural Triangle<br>Explorer</div>
+        <div class="pkg-loc">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1"/></svg>
+          Sigiriya · Anuradhapura · Kandy
+        </div>
+        <div class="pkg-meta">
+          <div class="pkg-meta-item"><strong>5–8 Days</strong>Duration</div>
+          <div class="pkg-meta-item"><strong>1–12</strong>Travelers</div>
+          <div class="pkg-meta-item"><strong>Click</strong>Full Details</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pkg-card" onclick="openPkgModal('southern')">
+      <div class="pkg-card-bg" style="background-image: url('assets/images/packages/southern-coast.jpg');"></div>
+      <div class="pkg-card-overlay"></div>
+      <div class="pkg-price" style="background:rgba(8,8,8,0.7);padding:6px 12px;">from $320<small>per person</small></div>
+      <div class="pkg-card-content">
+        <div class="pkg-badge">Beach & Sun</div>
+        <div class="pkg-name">Southern<br>Coast Escape</div>
+        <div class="pkg-loc">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1"/></svg>
+          Galle · Mirissa · Weligama
+        </div>
+        <div class="pkg-meta">
+          <div class="pkg-meta-item"><strong>3–6 Days</strong>Duration</div>
+          <div class="pkg-meta-item"><strong>1–8</strong>Travelers</div>
+          <div class="pkg-meta-item"><strong>Click</strong>Full Details</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pkg-card" onclick="openPkgModal('wild')">
+      <div class="pkg-card-bg" style="background-image: url('assets/images/packages/wild-srilanka.jpg');"></div>
+      <div class="pkg-card-overlay"></div>
+      <div class="pkg-price" style="background:rgba(8,8,8,0.7);padding:6px 12px;">from $560<small>per person</small></div>
+      <div class="pkg-card-content">
+        <div class="pkg-badge">Wildlife</div>
+        <div class="pkg-name">Wild<br>Sri Lanka</div>
+        <div class="pkg-loc">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1"/></svg>
+          Yala · Udawalawe · Minneriya
+        </div>
+        <div class="pkg-meta">
+          <div class="pkg-meta-item"><strong>4–7 Days</strong>Duration</div>
+          <div class="pkg-meta-item"><strong>1–6</strong>Travelers</div>
+          <div class="pkg-meta-item"><strong>Click</strong>Full Details</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pkg-card" onclick="openPkgModal('tea')">
+      <div class="pkg-card-bg" style="background-image: url('assets/images/packages/tea-trails.jpg');"></div>
+      <div class="pkg-card-overlay"></div>
+      <div class="pkg-price" style="background:rgba(8,8,8,0.7);padding:6px 12px;">from $410<small>per person</small></div>
+      <div class="pkg-card-content">
+        <div class="pkg-badge">Hill Country</div>
+        <div class="pkg-name">Tea Trails<br>& Highlands</div>
+        <div class="pkg-loc">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1"/></svg>
+          Nuwara Eliya · Ella · Haputale
+        </div>
+        <div class="pkg-meta">
+          <div class="pkg-meta-item"><strong>4–6 Days</strong>Duration</div>
+          <div class="pkg-meta-item"><strong>1–10</strong>Travelers</div>
+          <div class="pkg-meta-item"><strong>Click</strong>Full Details</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pkg-card" onclick="openPkgModal('grand')">
+      <div class="pkg-card-bg" style="background-image: url('assets/images/packages/grand-tour.jpg');"></div>
+      <div class="pkg-card-overlay"></div>
+      <div class="pkg-price" style="background:rgba(8,8,8,0.7);padding:6px 12px;">from $890<small>per person</small></div>
+      <div class="pkg-card-content">
+        <div class="pkg-badge">Luxury</div>
+        <div class="pkg-name">Island<br>Grand Tour</div>
+        <div class="pkg-loc">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1"/></svg>
+          Island-wide · 10+ Destinations
+        </div>
+        <div class="pkg-meta">
+          <div class="pkg-meta-item"><strong>10–14 Days</strong>Duration</div>
+          <div class="pkg-meta-item"><strong>1–6</strong>Travelers</div>
+          <div class="pkg-meta-item"><strong>Click</strong>Full Details</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- PACKAGE MODAL -->
+<div class="modal-overlay" id="pkgModalOverlay" onclick="closePkgModalOutside(event)" style="position:fixed;inset:0;background:rgba(8,8,8,0.92);backdrop-filter:blur(12px);z-index:800;display:flex;align-items:center;justify-content:center;padding:40px;opacity:0;pointer-events:none;transition:opacity .4s;">
+  <div id="pkgModal" style="background:var(--surface);border:1px solid var(--border);max-width:860px;width:100%;max-height:88vh;overflow-y:auto;scrollbar-width:none;transform:translateY(30px);transition:transform .4s;position:relative;">
+    <div style="position:relative;height:320px;overflow:hidden;">
+      <img id="pmImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;transition:transform 8s ease-out;">
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(20,20,20,1) 0%,rgba(20,20,20,0.2) 50%,transparent 100%);"></div>
+      <button onclick="closePkgModal()" style="position:absolute;top:16px;right:16px;width:38px;height:38px;background:rgba(8,8,8,0.8);border:1px solid var(--border);color:var(--text);font-size:16px;cursor:none;display:flex;align-items:center;justify-content:center;transition:background .2s;z-index:2;">✕</button>
+      <div style="position:absolute;bottom:24px;left:32px;z-index:2;">
+        <div id="pmBadge" style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;background:var(--gold);color:var(--black);padding:4px 12px;display:inline-block;margin-bottom:10px;font-weight:500;"></div>
+        <div id="pmName" style="font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:600;color:#fff;line-height:1;text-shadow:0 2px 20px rgba(0,0,0,0.9);"></div>
+      </div>
+    </div>
+    <div style="padding:32px;">
+      <!-- ROUTE -->
+      <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Route</div>
+      <div id="pmRoute" style="font-size:15px;color:var(--text);margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border);"></div>
+      <!-- INFO GRID -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:28px;">
+        <div style="background:var(--surface2);padding:16px;text-align:center;"><div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Duration</div><div id="pmDays" style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);"></div></div>
+        <div style="background:var(--surface2);padding:16px;text-align:center;"><div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Travelers</div><div id="pmTravelers" style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);"></div></div>
+        <div style="background:var(--surface2);padding:16px;text-align:center;"><div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">From</div><div id="pmPrice" style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);"></div></div>
+        <div style="background:var(--surface2);padding:16px;text-align:center;"><div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Best Time</div><div id="pmTime" style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);"></div></div>
+      </div>
+      <!-- DESCRIPTION -->
+      <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">About This Package</div>
+      <p id="pmDesc" style="font-size:14px;color:rgba(255,255,255,0.6);line-height:1.9;margin-bottom:24px;"></p>
+      <!-- DESTINATIONS -->
+      <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">Destinations Covered</div>
+      <div id="pmDests" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;"></div>
+      <!-- ACTIVITIES -->
+      <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">Included Activities</div>
+      <div id="pmActs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;"></div>
+      <!-- WHAT'S INCLUDED -->
+      <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">What's Included</div>
+      <div id="pmIncludes" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:32px;"></div>
+      <!-- CTA -->
+      <div style="display:flex;gap:16px;align-items:center;">
+        <a id="pmCta" href="package-builder.html" style="font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:var(--black);background:var(--gold);padding:16px 36px;text-decoration:none;transition:background .3s;">Book This Package →</a>
+        <button onclick="closePkgModal()" style="font-size:12px;letter-spacing:0.1em;color:var(--muted);background:transparent;border:none;cursor:none;padding:16px 0;transition:color .3s;">← Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="how-inner">
+    <div class="fade-in">
+      <div class="section-eyebrow">The Process</div>
+      <h2 class="section-title">Simple steps to your <em>dream trip</em></h2>
+      <div class="gold-line"></div>
+      <div class="how-steps">
+        <div class="how-step">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <div class="step-title">Pick Your Package</div>
+            <div class="step-desc">Browse our six curated Sri Lanka collections. Each covers a different experience — culture, beach, wildlife, highlands, or the full island.</div>
+          </div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <div class="step-title">Customize It</div>
+            <div class="step-desc">Choose your trip duration, number of travelers, travel style (budget/comfort/luxury), and activities. We show your live price as you go.</div>
+          </div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <div class="step-title">Review Your Bill</div>
+            <div class="step-desc">See a full itemized cost breakdown — accommodations, transport, activities, any applicable discounts — before you commit to anything.</div>
+          </div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">04</div>
+          <div class="step-content">
+            <div class="step-title">Confirm & Go</div>
+            <div class="step-desc">Book with confidence. We handle hotels, transfers, and everything in between. You just show up and experience the magic.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="how-visual fade-in fade-in-delay-2">
+      <img class="how-visual-img" src="assets/images/how-visual.jpg" alt="Sri Lanka landscape">
+      <div class="visual-tag">Your Adventure Awaits</div>
+      <div class="how-visual-caption">"The island that changes how you see the world"</div>
+    </div>
+  </div>
+</section>
+
+<!-- DESTINATIONS PREVIEW -->
+<section class="destinations fade-in" id="destinations">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:48px;">
+    <div>
+      <div class="section-eyebrow">Iconic Places</div>
+      <h2 class="section-title">The destinations<br>that define <em>Sri Lanka</em></h2>
+    </div>
+    <a href="destinations.html" class="btn-ghost" style="margin-bottom:12px;">
+      View All
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+  <div class="dest-scroll-container">
+    <div class="dest-card">
+      <div class="dest-card-bg" style="background-image: url('assets/images/destinations/sigiriya.jpg');"></div>
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-info">
+        <div class="dest-card-name">Sigiriya</div>
+        <div class="dest-card-tag">Rock Fortress</div>
+      </div>
+    </div>
+    <div class="dest-card">
+      <div class="dest-card-bg" style="background-image: url('assets/images/destinations/ella.jpg');"></div>
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-info">
+        <div class="dest-card-name">Ella</div>
+        <div class="dest-card-tag">Hill Country</div>
+      </div>
+    </div>
+    <div class="dest-card">
+      <div class="dest-card-bg" style="background-image: url('assets/images/destinations/galle.jpg');"></div>
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-info">
+        <div class="dest-card-name">Galle Fort</div>
+        <div class="dest-card-tag">Colonial Heritage</div>
+      </div>
+    </div>
+    <div class="dest-card">
+      <div class="dest-card-bg" style="background-image: url('assets/images/destinations/yala.jpg');"></div>
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-info">
+        <div class="dest-card-name">Yala</div>
+        <div class="dest-card-tag">Wildlife Safari</div>
+      </div>
+    </div>
+    <div class="dest-card">
+      <div class="dest-card-bg" style="background-image: url('assets/images/destinations/mirissa.jpg');"></div>
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-info">
+        <div class="dest-card-name">Mirissa</div>
+        <div class="dest-card-tag">Beach & Whales</div>
+      </div>
+    </div>
+    <div class="dest-card">
+      <div class="dest-card-bg" style="background-image: url('assets/images/destinations/kandy.jpg');"></div>
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-info">
+        <div class="dest-card-name">Kandy</div>
+        <div class="dest-card-tag">Temple of Tooth</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIAL -->
+<div class="testimonial fade-in">
+  <blockquote class="testimonial-quote">
+    "We had absolutely no idea what to expect. Serendib handed us Sri Lanka on a golden platter — every detail was flawless, every moment unforgettable."
+  </blockquote>
+  <div class="testimonial-author">— Priya & Arjun, Bangalore · Cultural Triangle Explorer</div>
+</div>
+
+<!-- CTA -->
+<section class="cta-section fade-in">
+  <h2 class="cta-title">
+    Your Sri Lanka<br>
+    story starts<br>
+    <em>right here</em>
+  </h2>
+  <div class="cta-right">
+    <p class="cta-desc">Join thousands of travelers who've discovered the pearl of the Indian Ocean with BuildMyTrip. Register in seconds, customize your package, and start counting down the days.</p>
+    <div class="cta-actions">
+      <a href="register.html" class="btn-primary"><span>Create Account</span></a>
+      <a href="#packages" class="btn-ghost">
+        Browse Packages
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">
+    <div class="footer-logo">Build<em style="font-style:italic;font-weight:300;color:var(--gold);">My</em>trip</div>
+    <p class="footer-tagline">Sri Lanka's finest curated travel experiences. Built by travelers, for travelers.</p>
+  </div>
+  <div>
+    <div class="footer-col-title">Packages</div>
+    <ul class="footer-links">
+      <li><a href="package-builder.html">Cultural Triangle</a></li>
+      <li><a href="package-builder.html">Southern Coast</a></li>
+      <li><a href="package-builder.html">Wild Sri Lanka</a></li>
+      <li><a href="package-builder.html">Tea Trails</a></li>
+      <li><a href="package-builder.html">Grand Tour</a></li>
+    </ul>
+  </div>
+  <div>
+    <div class="footer-col-title">Company</div>
+    <ul class="footer-links">
+      <li><a href="#">About Us</a></li>
+      <li><a href="#">How It Works</a></li>
+      <li><a href="#">Destinations</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+  </div>
+  <div>
+    <div class="footer-col-title">Account</div>
+    <ul class="footer-links">
+      <li><a href="#">Register</a></li>
+      <li><a href="#">Login</a></li>
+      <li><a href="#">My Bookings</a></li>
+      <li><a href="#">Support</a></li>
+    </ul>
+  </div>
+</footer>
+<div class="footer-bottom">
+  <span class="footer-bottom-text">© 2024 Serendib Travel. All rights reserved.</span>
+  <span class="footer-bottom-text">Colombo, Sri Lanka</span>
+</div>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animCursor() {
+    cursor.style.left = mx + 'px';
+    cursor.style.top = my + 'px';
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(animCursor);
+  }
+  animCursor();
+  document.querySelectorAll('a, button, .pkg-card, .dest-card, .chip').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.width = '18px'; cursor.style.height = '18px';
+      ring.style.width = '52px'; ring.style.height = '52px';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.width = '10px'; cursor.style.height = '10px';
+      ring.style.width = '36px'; ring.style.height = '36px';
+    });
+  });
+
+  // Navbar scroll
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  // Scroll fade-in
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // PACKAGE DATA
+  const pkgData = {
+    cultural: {
+      name: 'Cultural Triangle Explorer',
+      badge: 'Most Popular',
+      img: 'assets/images/packages/cultural-triangle.jpg',
+      route: 'Colombo → Sigiriya → Anuradhapura → Polonnaruwa → Kandy → Colombo',
+      days: '5–8 Days', travelers: '1–12', price: 'from $480', time: 'Dec – Apr',
+      desc: 'Journey through the ancient heartland of Sri Lanka — a UNESCO-rich trail connecting rock fortresses, sacred cities, and the last royal capital. This package takes you through 2,500 years of history across three of the island\'s most spectacular archaeological sites, ending in the cultural capital Kandy.',
+      destinations: ['Colombo', 'Sigiriya', 'Anuradhapura', 'Polonnaruwa', 'Kandy'],
+      activities: ['City Tour', 'Temple Visit', 'Cycling', 'Cultural Show', 'Cooking Class'],
+      includes: ['Airport Transfers', 'Hotel Accommodation', 'Daily Breakfast', 'Expert Guide', 'Entry Tickets', 'Air-conditioned Transport']
+    },
+    southern: {
+      name: 'Southern Coast Escape',
+      badge: 'Beach & Sun',
+      img: 'assets/images/packages/southern-coast.jpg',
+      route: 'Colombo → Galle → Mirissa → Weligama → Colombo',
+      days: '3–6 Days', travelers: '1–8', price: 'from $320', time: 'Nov – Apr',
+      desc: 'Sri Lanka\'s southern coastline is a string of picture-perfect beaches, colonial forts, and world-class surf breaks. From the UNESCO-listed Galle Fort\'s cobblestone streets to Mirissa\'s blue whale watching and Weligama\'s gentle surf, this is the ultimate beach escape.',
+      destinations: ['Galle', 'Mirissa', 'Weligama'],
+      activities: ['Whale Watching', 'Surfing', 'Snorkeling', 'Glass Bottom Boat', 'Beach Yoga'],
+      includes: ['Airport Transfers', 'Beach Hotel', 'Daily Breakfast', 'Snorkeling Gear', 'Whale Watch Tour', 'Air-conditioned Transport']
+    },
+    wild: {
+      name: 'Wild Sri Lanka',
+      badge: 'Wildlife',
+      img: 'assets/images/packages/wild-srilanka.jpg',
+      route: 'Colombo → Udawalawe → Yala → Mirissa → Colombo',
+      days: '4–7 Days', travelers: '1–6', price: 'from $560', time: 'Feb – Jul',
+      desc: 'Sri Lanka is one of Asia\'s premier wildlife destinations — leopards, elephants, sloth bears, and blue whales all in one island. This route takes you through two of the best national parks before ending at the coast for whale watching, making it a wildlife lover\'s dream itinerary.',
+      destinations: ['Udawalawe', 'Yala', 'Mirissa'],
+      activities: ['Jeep Safari', 'Bird Watching', 'Night Safari', 'Whale Watching', 'Snorkeling'],
+      includes: ['Airport Transfers', 'Safari Lodge Stay', 'Daily Breakfast', 'Jeep Safari', 'Park Entry Fees', 'Expert Naturalist Guide']
+    },
+    tea: {
+      name: 'Tea Trails & Highlands',
+      badge: 'Hill Country',
+      img: 'assets/images/packages/tea-trails.jpg',
+      route: 'Colombo → Kandy → Nuwara Eliya → Ella → Colombo',
+      days: '4–6 Days', travelers: '1–10', price: 'from $410', time: 'Jan – Apr',
+      desc: 'The hill country is Sri Lanka\'s most dramatic landscape — misty peaks, endless green tea estates, and the iconic Nine Arches Bridge. This route follows the legendary scenic train line through the heart of Ceylon tea country, with stops in the cultural capital Kandy and the charming highland villages.',
+      destinations: ['Kandy', 'Nuwara Eliya', 'Ella'],
+      activities: ['Tea Factory Tour', 'Scenic Train Ride', 'Hiking', 'Waterfall Visit', 'Cultural Show'],
+      includes: ['Airport Transfers', 'Tea Estate Bungalow', 'Daily Breakfast', 'Train Tickets', 'Tea Factory Tour', 'Expert Guide']
+    },
+    grand: {
+      name: 'Island Grand Tour',
+      badge: 'Luxury',
+      img: 'assets/images/packages/grand-tour.jpg',
+      route: 'Colombo → Kandy → Ella → Yala → Galle → Mirissa → Colombo',
+      days: '10–14 Days', travelers: '1–6', price: 'from $890', time: 'Dec – Apr',
+      desc: 'The ultimate Sri Lanka experience — covering the best of culture, highlands, wildlife, heritage, and beaches in one seamless luxury journey. This is the package for those who want to experience everything the island has to offer without compromise. Staying in the finest hotels at every stop.',
+      destinations: ['Kandy', 'Nuwara Eliya', 'Ella', 'Yala', 'Galle', 'Mirissa'],
+      activities: ['City Tour', 'Safari', 'Whale Watching', 'Surfing', 'Hiking', 'Temple Visit', 'Tea Tour'],
+      includes: ['Airport Transfers', 'Luxury Hotels', 'All Meals', 'Private Driver', 'All Entry Fees', 'Expert Guide', 'Jeep Safari', 'Whale Watch Tour']
+    }
+  };
+
+  function openPkgModal(id) {
+    const d = pkgData[id];
+    if(!d) return;
+    document.getElementById('pmImg').src = d.img;
+    document.getElementById('pmBadge').textContent = d.badge;
+    document.getElementById('pmName').textContent = d.name;
+    document.getElementById('pmRoute').textContent = d.route;
+    document.getElementById('pmDays').textContent = d.days;
+    document.getElementById('pmTravelers').textContent = d.travelers;
+    document.getElementById('pmPrice').textContent = d.price;
+    document.getElementById('pmTime').textContent = d.time;
+    document.getElementById('pmDesc').textContent = d.desc;
+    document.getElementById('pmDests').innerHTML = d.destinations.map(dest =>
+      `<span style="font-size:12px;padding:6px 14px;border:1px solid var(--border);color:var(--gold);">📍 ${dest}</span>`
+    ).join('');
+    document.getElementById('pmActs').innerHTML = d.activities.map(a =>
+      `<span style="font-size:12px;padding:6px 14px;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);">${a}</span>`
+    ).join('');
+    document.getElementById('pmIncludes').innerHTML = d.includes.map(i =>
+      `<div style="font-size:13px;color:rgba(255,255,255,0.65);padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:8px;"><span style="color:var(--gold);">✓</span>${i}</div>`
+    ).join('');
+    // Pass package ID so builder auto-selects it
+    document.getElementById('pmCta').href = 'package-builder.html?package=' + id;
+    const overlay = document.getElementById('pkgModalOverlay');
+    overlay.style.opacity = '1';
+    overlay.style.pointerEvents = 'all';
+    document.getElementById('pkgModal').style.transform = 'translateY(0)';
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => { document.getElementById('pmImg').style.transform = 'scale(1.04)'; }, 100);
+  }
+
+  function closePkgModal() {
+    const overlay = document.getElementById('pkgModalOverlay');
+    overlay.style.opacity = '0';
+    overlay.style.pointerEvents = 'none';
+    document.getElementById('pkgModal').style.transform = 'translateY(30px)';
+    document.getElementById('pmImg').style.transform = 'scale(1)';
+    document.body.style.overflow = '';
+  }
+
+  function closePkgModalOutside(e) {
+    if(e.target === document.getElementById('pkgModalOverlay')) closePkgModal();
+  }
+
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closePkgModal(); });
+</script>
+</body>
+</html>

@@ -39,4 +39,6 @@ public class Destination {
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public BigDecimal getBasePrice() { return basePrice; }
     public void setBasePrice(BigDecimal basePrice) { this.basePrice = basePrice; }
+
+    
 }

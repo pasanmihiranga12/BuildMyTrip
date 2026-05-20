@@ -27,7 +27,7 @@ public class AuthController {
         this.jwt = jwt;
     }
 
-    // ================= REGISTER REQUEST =================
+    //REGISTER REQUEST
 
     public static class RegisterRequest {
 
@@ -81,7 +81,7 @@ public class AuthController {
         }
     }
 
-    // ================= LOGIN REQUEST =================
+    // LOGIN REQUEST
 
     public static class LoginRequest {
 
@@ -111,7 +111,7 @@ public class AuthController {
         }
     }
 
-    // ================= AUTH RESPONSE =================
+    // AUTH RESPONSE 
 
     public static class AuthResponse {
 
@@ -138,7 +138,7 @@ public class AuthController {
         }
     }
 
-    // ================= PROFILE UPDATE =================
+    //  PROFILE UPDATE 
 
     public static class ProfileUpdate {
 
@@ -167,7 +167,7 @@ public class AuthController {
         }
     }
 
-    // ================= REGISTER =================
+    // REGISTER 
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
@@ -202,7 +202,7 @@ public class AuthController {
         );
     }
 
-    // ================= LOGIN =================
+    // LOGIN
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req) {
@@ -226,7 +226,7 @@ public class AuthController {
         );
     }
 
-    // ================= GET PROFILE =================
+    // GET PROFILE 
 
     @GetMapping("/me")
     public ResponseEntity<?> me(Authentication auth) {
@@ -247,7 +247,7 @@ public class AuthController {
         ));
     }
 
-    // ================= UPDATE PROFILE =================
+    //  UPDATE PROFILE 
 
     @PutMapping("/me")
     public ResponseEntity<?> updateMe(
@@ -275,7 +275,7 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("ok", true));
     }
 
-    // ================= EXCEPTION =================
+    //  EXCEPTION 
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<?> denied(AccessDeniedException ex) {

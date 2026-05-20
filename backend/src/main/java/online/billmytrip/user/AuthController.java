@@ -27,73 +27,260 @@ public class AuthController {
         this.jwt = jwt;
     }
 
-    public record RegisterRequest(
-            @NotBlank @Size(min = 3, max = 60) String username,
-            @NotBlank @Size(min = 6, max = 100) String password,
-            @NotBlank @Email String email,
-            String phone) {}
+    // ================= REGISTER REQUEST =================
 
-    public record LoginRequest(@NotBlank String username, @NotBlank String password) {}
+    public static class RegisterRequest {
 
-    public record AuthResponse(String token, String username, String role) {}
+        @NotBlank
+        @Size(min = 3, max = 60)
+        private String username;
+
+        @NotBlank
+        @Size(min = 6, max = 100)
+        private String password;
+
+        @NotBlank
+        @Email
+        private String email;
+
+        private String phone;
+
+        public RegisterRequest() {
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getPhone() {
+            return phone;
+        }
+
+        public void setPhone(String phone) {
+            this.phone = phone;
+        }
+    }
+
+    // ================= LOGIN REQUEST =================
+
+    public static class LoginRequest {
+
+        @NotBlank
+        private String username;
+
+        @NotBlank
+        private String password;
+
+        public LoginRequest() {
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+    }
+
+    // ================= AUTH RESPONSE =================
+
+    public static class AuthResponse {
+
+        private String token;
+        private String username;
+        private String role;
+
+        public AuthResponse(String token, String username, String role) {
+            this.token = token;
+            this.username = username;
+            this.role = role;
+        }
+
+        public String getToken() {
+            return token;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getRole() {
+            return role;
+        }
+    }
+
+    // ================= PROFILE UPDATE =================
+
+    public static class ProfileUpdate {
+
+        @Email
+        private String email;
+
+        private String phone;
+
+        public ProfileUpdate() {
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getPhone() {
+            return phone;
+        }
+
+        public void setPhone(String phone) {
+            this.phone = phone;
+        }
+    }
+
+    // ================= REGISTER =================
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
-        if (users.existsByUsername(req.username())) {
-            return ResponseEntity.badRequest().body(Map.of("error", "username taken"));
+
+        if (users.existsByUsername(req.getUsername())) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "username taken"));
         }
-        if (users.existsByEmail(req.email())) {
-            return ResponseEntity.badRequest().body(Map.of("error", "email already registered"));
+
+        if (users.existsByEmail(req.getEmail())) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "email already registered"));
         }
+
         User u = new User();
-        u.setUsername(req.username());
-        u.setPassword(encoder.encode(req.password()));
-        u.setEmail(req.email());
-        u.setPhone(req.phone());
+        u.setUsername(req.getUsername());
+        u.setPassword(encoder.encode(req.getPassword()));
+        u.setEmail(req.getEmail());
+        u.setPhone(req.getPhone());
         u.setRole(Role.TOURIST);
+
         users.save(u);
 
         String token = jwt.issue(u.getUsername(), u.getRole().name());
-        return ResponseEntity.ok(new AuthResponse(token, u.getUsername(), u.getRole().name()));
+
+        return ResponseEntity.ok(
+                new AuthResponse(
+                        token,
+                        u.getUsername(),
+                        u.getRole().name()
+                )
+        );
     }
+
+    // ================= LOGIN =================
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req) {
-        User u = users.findByUsername(req.username())
-                .orElseThrow(() -> new AccessDeniedException("invalid credentials"));
-        if (!encoder.matches(req.password(), u.getPassword())) {
+
+        User u = users.findByUsername(req.getUsername())
+                .orElseThrow(() ->
+                        new AccessDeniedException("invalid credentials"));
+
+        if (!encoder.matches(req.getPassword(), u.getPassword())) {
             throw new AccessDeniedException("invalid credentials");
         }
+
         String token = jwt.issue(u.getUsername(), u.getRole().name());
-        return ResponseEntity.ok(new AuthResponse(token, u.getUsername(), u.getRole().name()));
+
+        return ResponseEntity.ok(
+                new AuthResponse(
+                        token,
+                        u.getUsername(),
+                        u.getRole().name()
+                )
+        );
     }
+
+    // ================= GET PROFILE =================
 
     @GetMapping("/me")
     public ResponseEntity<?> me(Authentication auth) {
-        if (auth == null) return ResponseEntity.status(401).build();
-        User u = users.findByUsername(auth.getName()).orElseThrow();
+
+        if (auth == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        User u = users.findByUsername(auth.getName())
+                .orElseThrow();
+
         return ResponseEntity.ok(Map.of(
                 "id", u.getId(),
                 "username", u.getUsername(),
                 "email", u.getEmail(),
                 "phone", u.getPhone() == null ? "" : u.getPhone(),
-                "role", u.getRole().name()));
+                "role", u.getRole().name()
+        ));
     }
 
-    public record ProfileUpdate(@Email String email, String phone) {}
+    // ================= UPDATE PROFILE =================
 
     @PutMapping("/me")
-    public ResponseEntity<?> updateMe(Authentication auth, @Valid @RequestBody ProfileUpdate req) {
-        if (auth == null) return ResponseEntity.status(401).build();
-        User u = users.findByUsername(auth.getName()).orElseThrow();
-        if (req.email() != null && !req.email().isBlank()) u.setEmail(req.email());
-        if (req.phone() != null) u.setPhone(req.phone());
+    public ResponseEntity<?> updateMe(
+            Authentication auth,
+            @Valid @RequestBody ProfileUpdate req
+    ) {
+
+        if (auth == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        User u = users.findByUsername(auth.getName())
+                .orElseThrow();
+
+        if (req.getEmail() != null && !req.getEmail().isBlank()) {
+            u.setEmail(req.getEmail());
+        }
+
+        if (req.getPhone() != null) {
+            u.setPhone(req.getPhone());
+        }
+
         users.save(u);
+
         return ResponseEntity.ok(Map.of("ok", true));
     }
 
+    // ================= EXCEPTION =================
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<?> denied(AccessDeniedException ex) {
-        return ResponseEntity.status(401).body(Map.of("error", ex.getMessage()));
+
+        return ResponseEntity.status(401)
+                .body(Map.of("error", ex.getMessage()));
     }
 }

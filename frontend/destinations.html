@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Destinations — BuildMyTrip</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --gold-dim: rgba(201,168,76,0.15);
+    --black: #080808;
+    --deep: #0D0D0D;
+    --surface: #141414;
+    --surface2: #1C1C1C;
+    --muted: rgba(255,255,255,0.45);
+    --text: rgba(255,255,255,0.92);
+    --border: rgba(201,168,76,0.2);
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CURSOR */
+  .cursor {
+    position: fixed; top: 0; left: 0;
+    width: 10px; height: 10px;
+    background: var(--gold); border-radius: 50%;
+    pointer-events: none; z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s;
+  }
+  .cursor-ring {
+    position: fixed; top: 0; left: 0;
+    width: 36px; height: 36px;
+    border: 1px solid rgba(201,168,76,0.5); border-radius: 50%;
+    pointer-events: none; z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.18s ease-out, width 0.3s, height 0.3s;
+  }
+
+  /* NOISE */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 100; opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 500; padding: 22px 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(8,8,8,0.97);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+  }
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px; font-weight: 600;
+    letter-spacing: 0.04em; color: #fff; text-decoration: none;
+  }
+  .nav-logo span { font-style: italic; color: var(--gold); font-weight: 300; }
+  .nav-links { display: flex; gap: 40px; list-style: none; }
+  .nav-links a {
+    font-size: 12px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--muted);
+    text-decoration: none; transition: color 0.3s;
+  }
+  .nav-links a:hover, .nav-links a.active { color: var(--gold); }
+  .nav-cta {
+    font-size: 12px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--black);
+    background: var(--gold); padding: 10px 26px;
+    text-decoration: none; transition: background 0.3s;
+  }
+  .nav-cta:hover { background: var(--gold-light); }
+
+  /* PAGE HERO */
+  .page-hero {
+    padding: 140px 60px 60px;
+    background: var(--deep);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .page-hero::before {
+    content: 'DESTINATIONS';
+    position: absolute;
+    right: 40px; top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 120px; font-weight: 700;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(201,168,76,0.08);
+    pointer-events: none; user-select: none;
+    white-space: nowrap;
+  }
+  .page-hero-eyebrow {
+    font-size: 11px; letter-spacing: 0.3em;
+    text-transform: uppercase; color: var(--gold);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .page-hero-eyebrow::before {
+    content: ''; display: block;
+    width: 40px; height: 1px; background: var(--gold);
+  }
+  .page-hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(42px, 5vw, 68px);
+    font-weight: 300; line-height: 1.1;
+  }
+  .page-hero-title em { font-style: italic; color: var(--gold); }
+  .page-hero-sub {
+    font-size: 14px; color: var(--muted);
+    line-height: 1.8; max-width: 480px; margin-top: 16px;
+  }
+
+  /* FILTER BAR */
+  .filter-bar {
+    padding: 28px 60px;
+    background: var(--surface);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 20px;
+    position: sticky; top: 69px; z-index: 400;
+    backdrop-filter: blur(12px);
+  }
+  .filter-tabs { display: flex; gap: 4px; }
+  .filter-tab {
+    font-size: 11px; letter-spacing: 0.15em;
+    text-transform: uppercase; padding: 8px 18px;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--muted); background: transparent;
+    cursor: none; transition: all 0.2s;
+  }
+  .filter-tab:hover { border-color: var(--border); color: var(--gold); }
+  .filter-tab.active {
+    background: var(--gold); color: var(--black);
+    border-color: var(--gold); font-weight: 500;
+  }
+  .filter-count {
+    font-size: 12px; color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+  .filter-count span { color: var(--gold); font-family: 'Cormorant Garamond', serif; font-size: 18px; }
+
+  /* GRID */
+  .destinations-section {
+    padding: 60px;
+    background: var(--black);
+  }
+  .dest-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+  }
+
+  /* DESTINATION CARD */
+  .dest-card {
+    position: relative;
+    overflow: hidden;
+    cursor: none;
+    aspect-ratio: 4/5;
+  }
+  .dest-card.large .dest-card-name { }
+  .dest-card-img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .dest-card:hover .dest-card-img { transform: scale(1.08); }
+
+  /* STRONG overlay so text always readable */
+  .dest-card-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(8,8,8,0.97) 0%,
+      rgba(8,8,8,0.6) 35%,
+      rgba(8,8,8,0.1) 65%,
+      rgba(8,8,8,0.3) 100%
+    );
+    transition: background 0.4s;
+  }
+  .dest-card:hover .dest-card-overlay {
+    background: linear-gradient(
+      to top,
+      rgba(8,8,8,0.98) 0%,
+      rgba(8,8,8,0.7) 40%,
+      rgba(8,8,8,0.25) 70%,
+      rgba(8,8,8,0.4) 100%
+    );
+  }
+
+  .dest-card-content {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 28px;
+    z-index: 2;
+  }
+  .dest-card-category {
+    font-size: 10px; letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: rgba(201,168,76,0.12);
+    border: 1px solid rgba(201,168,76,0.3);
+    padding: 4px 10px;
+    display: inline-block; margin-bottom: 10px;
+  }
+  .dest-card-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px; font-weight: 600;
+    color: #fff; line-height: 1.1;
+    margin-bottom: 6px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+  }
+  .dest-card.large .dest-card-name { font-size: 42px; }
+  .dest-card-region {
+    font-size: 12px; color: rgba(255,255,255,0.7);
+    letter-spacing: 0.08em; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .dest-card-region svg { opacity: 0.7; flex-shrink: 0; }
+
+  .dest-card-footer {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    opacity: 0; transform: translateY(10px);
+    transition: all 0.35s;
+  }
+  .dest-card:hover .dest-card-footer { opacity: 1; transform: translateY(0); }
+  .dest-card-highlights {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .highlight-chip {
+    font-size: 10px; letter-spacing: 0.1em;
+    padding: 3px 10px;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.7);
+  }
+  .dest-card-btn {
+    font-size: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--black); background: var(--gold);
+    padding: 8px 16px; border: none;
+    cursor: none; transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .dest-card-btn:hover { background: var(--gold-light); }
+
+  /* TOP BADGE on card */
+  .dest-card-badge {
+    position: absolute; top: 20px; left: 20px;
+    font-size: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: var(--gold); color: var(--black);
+    padding: 5px 12px; font-weight: 500;
+    z-index: 2;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(8,8,8,0.92);
+    backdrop-filter: blur(12px);
+    z-index: 800;
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.4s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    max-width: 900px; width: 100%;
+    max-height: 88vh; overflow-y: auto;
+    scrollbar-width: none;
+    transform: translateY(30px);
+    transition: transform 0.4s;
+    position: relative;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal::-webkit-scrollbar { display: none; }
+
+  .modal-img-wrap {
+    position: relative; height: 360px; overflow: hidden;
+  }
+  .modal-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 8s ease-out;
+  }
+  .modal-overlay.open .modal-img { transform: scale(1.04); }
+  .modal-img-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(20,20,20,1) 0%, rgba(20,20,20,0.2) 50%, transparent 100%);
+  }
+  .modal-img-title {
+    position: absolute; bottom: 28px; left: 36px; right: 36px;
+    z-index: 2;
+  }
+  .modal-img-category {
+    font-size: 10px; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--gold);
+    margin-bottom: 8px;
+  }
+  .modal-img-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px; font-weight: 600;
+    color: #fff; line-height: 1;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.9);
+  }
+
+  .modal-body { padding: 32px 36px 36px; }
+  .modal-close {
+    position: absolute; top: 20px; right: 20px;
+    width: 40px; height: 40px;
+    background: rgba(8,8,8,0.8); border: 1px solid var(--border);
+    color: var(--text); font-size: 18px;
+    cursor: none; z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .modal-close:hover { background: var(--gold); color: var(--black); }
+
+  .modal-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .modal-tag {
+    font-size: 11px; letter-spacing: 0.12em;
+    padding: 5px 14px;
+    border: 1px solid var(--border); color: var(--gold);
+    text-transform: uppercase;
+  }
+  .modal-desc {
+    font-size: 14px; line-height: 1.9;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 28px;
+  }
+  .modal-info-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+  .modal-info-item {
+    background: var(--surface2);
+    padding: 18px 20px;
+    text-align: center;
+  }
+  .modal-info-label {
+    font-size: 10px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .modal-info-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; color: var(--gold);
+  }
+  .modal-packages-title {
+    font-size: 11px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .modal-packages { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; }
+  .modal-pkg-chip {
+    font-size: 12px; padding: 8px 16px;
+    border: 1px solid var(--border); color: var(--text);
+    transition: all 0.2s; cursor: none;
+  }
+  .modal-pkg-chip:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+  .modal-cta {
+    display: flex; gap: 14px;
+  }
+  .btn-primary {
+    display: inline-block; font-size: 12px;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--black); background: var(--gold);
+    padding: 14px 32px; text-decoration: none;
+    transition: background 0.3s; border: none; cursor: none;
+  }
+  .btn-primary:hover { background: var(--gold-light); }
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none;
+    padding: 14px 0; transition: color 0.3s; border: none;
+    background: transparent; cursor: none;
+  }
+  .btn-ghost:hover { color: var(--gold); }
+
+  /* FADE IN */
+  .fade-in { opacity: 0; transform: translateY(24px); transition: opacity 0.7s, transform 0.7s; }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  /* FOOTER MINI */
+  .footer-mini {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 28px 60px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-mini-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; font-weight: 600; color: #fff;
+  }
+  .footer-mini-logo span { font-style: italic; color: var(--gold); font-weight: 300; }
+  .footer-mini-text { font-size: 12px; color: rgba(255,255,255,0.2); }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">Build<span>My</span>trip</a>
+  <ul class="nav-links">
+    <li><a href="index.html#packages">Packages</a></li>
+    <li><a href="destinations.html" class="active">Destinations</a></li>
+    <li><a href="index.html#customize">Customize</a></li>
+    <li><a href="#">About</a></li>
+  </ul>
+  <a href="login.html" class="nav-cta">Login</a>
+</nav>
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+  <div class="page-hero-eyebrow">Explore Sri Lanka</div>
+  <h1 class="page-hero-title">Iconic <em>destinations</em>,<br>one island</h1>
+  <p class="page-hero-sub">From ancient rock fortresses to tropical beaches, misty hill stations to wild safari plains — every corner of Sri Lanka tells a story.</p>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <div class="filter-tabs">
+    <button class="filter-tab active" onclick="filterDest('all', this)">All</button>
+    <button class="filter-tab" onclick="filterDest('cultural', this)">Cultural</button>
+    <button class="filter-tab" onclick="filterDest('beach', this)">Beach</button>
+    <button class="filter-tab" onclick="filterDest('wildlife', this)">Wildlife</button>
+    <button class="filter-tab" onclick="filterDest('hills', this)">Hill Country</button>
+  </div>
+  <div class="filter-count"><span id="dest-count">12</span> destinations</div>
+</div>
+
+<!-- DESTINATIONS GRID -->
+<section class="destinations-section">
+  <div class="dest-grid" id="destGrid">
+
+    <!-- 1 SIGIRIYA — large -->
+    <div class="dest-card fade-in" data-cat="cultural" onclick="openModal('sigiriya')">
+      <img class="dest-card-img" src="assets/images/destinations/sigiriya.jpg" alt="Sigiriya">
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-badge">Must Visit</div>
+      <div class="dest-card-content">
+        <div class="dest-card-category">Cultural Heritage</div>
+        <div class="dest-card-name">Sigiriya</div>
+        <div class="dest-card-region">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1.2"/></svg>
+          Central Province · Matale District
+        </div>
+        <div class="dest-card-footer">
+          <div class="dest-card-highlights">
+            <span class="highlight-chip">Rock Fortress</span>
+            <span class="highlight-chip">UNESCO</span>
+            <span class="highlight-chip">Frescoes</span>
+          </div>
+          <button class="dest-card-btn">View Details</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 ELLA -->
+    <div class="dest-card fade-in" data-cat="hills" onclick="openModal('ella')">
+      <img class="dest-card-img" src="assets/images/destinations/ella.jpg" alt="Ella">
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-content">
+        <div class="dest-card-category">Hill Country</div>
+        <div class="dest-card-name">Ella</div>
+        <div class="dest-card-region">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1.2"/></svg>
+          Uva Province
+        </div>
+        <div class="dest-card-footer">
+          <div class="dest-card-highlights">
+            <span class="highlight-chip">Nine Arches</span>
+            <span class="highlight-chip">Hiking</span>
+          </div>
+          <button class="dest-card-btn">View Details</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 MIRISSA -->
+    <div class="dest-card fade-in" data-cat="beach" onclick="openModal('mirissa')">
+      <img class="dest-card-img" src="assets/images/destinations/mirissa.jpg" alt="Mirissa">
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-badge">Trending</div>
+      <div class="dest-card-content">
+        <div class="dest-card-category">Beach</div>
+        <div class="dest-card-name">Mirissa</div>
+        <div class="dest-card-region">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1.2"/></svg>
+          Southern Province
+        </div>
+        <div class="dest-card-footer">
+          <div class="dest-card-highlights">
+            <span class="highlight-chip">Whale Watching</span>
+            <span class="highlight-chip">Surfing</span>
+          </div>
+          <button class="dest-card-btn">View Details</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 KANDY -->
+    <div class="dest-card fade-in" data-cat="cultural" onclick="openModal('kandy')">
+      <img class="dest-card-img" src="assets/images/destinations/kandy.jpg" alt="Kandy">
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-content">
+        <div class="dest-card-category">Cultural</div>
+        <div class="dest-card-name">Kandy</div>
+        <div class="dest-card-region">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1.2"/></svg>
+          Central Province
+        </div>
+        <div class="dest-card-footer">
+          <div class="dest-card-highlights">
+            <span class="highlight-chip">Temple of Tooth</span>
+            <span class="highlight-chip">UNESCO</span>
+          </div>
+          <button class="dest-card-btn">View Details</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 YALA — large -->
+    <div class="dest-card fade-in" data-cat="wildlife" onclick="openModal('yala')">
+      <img class="dest-card-img" src="assets/images/destinations/yala.jpg" alt="Yala">
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-badge">Top Safari</div>
+      <div class="dest-card-content">
+        <div class="dest-card-category">Wildlife</div>
+        <div class="dest-card-name">Yala National Park</div>
+        <div class="dest-card-region">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1.2"/></svg>
+          Southern & Uva Provinces
+        </div>
+        <div class="dest-card-footer">
+          <div class="dest-card-highlights">
+            <span class="highlight-chip">Leopards</span>
+            <span class="highlight-chip">Elephants</span>
+            <span class="highlight-chip">Safari</span>
+          </div>
+          <button class="dest-card-btn">View Details</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 GALLE -->
+    <div class="dest-card fade-in" data-cat="cultural" onclick="openModal('galle')">
+      <img class="dest-card-img" src="assets/images/destinations/galle.jpg" alt="Galle Fort">
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-content">
+        <div class="dest-card-category">Heritage</div>
+        <div class="dest-card-name">Galle Fort</div>
+        <div class="dest-card-region">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1.2"/></svg>
+          Southern Province
+        </div>
+        <div class="dest-card-footer">
+          <div class="dest-card-highlights">
+            <span class="highlight-chip">Dutch Fort</span>
+            <span class="highlight-chip">UNESCO</span>
+          </div>
+          <button class="dest-card-btn">View Details</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 NUWARA ELIYA -->
+    <div class="dest-card fade-in" data-cat="hills" onclick="openModal('nuwara')">
+      <img class="dest-card-img" src="assets/images/destinations/nuwara-eliya.jpg" alt="Nuwara Eliya">
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-content">
+        <div class="dest-card-category">Hill Country</div>
+        <div class="dest-card-name">Nuwara Eliya</div>
+        <div class="dest-card-region">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1.2"/></svg>
+          Central Province
+        </div>
+        <div class="dest-card-footer">
+          <div class="dest-card-highlights">
+            <span class="highlight-chip">Tea Estates</span>
+            <span class="highlight-chip">Cool Climate</span>
+          </div>
+          <button class="dest-card-btn">View Details</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8 ANURADHAPURA -->
+    <div class="dest-card fade-in" data-cat="cultural" onclick="openModal('anuradhapura')">
+      <img class="dest-card-img" src="assets/images/destinations/anuradhapura.jpg" alt="Anuradhapura">
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-content">
+        <div class="dest-card-category">Ancient City</div>
+        <div class="dest-card-name">Anuradhapura</div>
+        <div class="dest-card-region">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1.2"/></svg>
+          North Central Province
+        </div>
+        <div class="dest-card-footer">
+          <div class="dest-card-highlights">
+            <span class="highlight-chip">Dagobas</span>
+            <span class="highlight-chip">UNESCO</span>
+          </div>
+          <button class="dest-card-btn">View Details</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9 TRINCOMALEE -->
+    <div class="dest-card fade-in" data-cat="beach" onclick="openModal('trinco')">
+      <img class="dest-card-img" src="assets/images/destinations/trincomalee.jpg" alt="Trincomalee">
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-content">
+        <div class="dest-card-category">Beach</div>
+        <div class="dest-card-name">Trincomalee</div>
+        <div class="dest-card-region">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1.2"/></svg>
+          Eastern Province
+        </div>
+        <div class="dest-card-footer">
+          <div class="dest-card-highlights">
+            <span class="highlight-chip">Natural Harbor</span>
+            <span class="highlight-chip">Diving</span>
+          </div>
+          <button class="dest-card-btn">View Details</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10 UDAWALAWE -->
+    <div class="dest-card fade-in" data-cat="wildlife" onclick="openModal('udawalawe')">
+      <img class="dest-card-img" src="assets/images/destinations/udawalawe.jpg" alt="Udawalawe">
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-content">
+        <div class="dest-card-category">Wildlife</div>
+        <div class="dest-card-name">Udawalawe</div>
+        <div class="dest-card-region">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1.2"/></svg>
+          Sabaragamuwa Province
+        </div>
+        <div class="dest-card-footer">
+          <div class="dest-card-highlights">
+            <span class="highlight-chip">Elephant Herds</span>
+            <span class="highlight-chip">Safari</span>
+          </div>
+          <button class="dest-card-btn">View Details</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 11 WELIGAMA -->
+    <div class="dest-card fade-in" data-cat="beach" onclick="openModal('weligama')">
+      <img class="dest-card-img" src="assets/images/destinations/weligama.jpg" alt="Weligama">
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-content">
+        <div class="dest-card-category">Beach</div>
+        <div class="dest-card-name">Weligama</div>
+        <div class="dest-card-region">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1.2"/></svg>
+          Southern Province
+        </div>
+        <div class="dest-card-footer">
+          <div class="dest-card-highlights">
+            <span class="highlight-chip">Stilt Fishing</span>
+            <span class="highlight-chip">Surfing</span>
+          </div>
+          <button class="dest-card-btn">View Details</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 12 POLONNARUWA -->
+    <div class="dest-card fade-in" data-cat="cultural" onclick="openModal('polonnaruwa')">
+      <img class="dest-card-img" src="assets/images/destinations/polonnaruwa.jpg" alt="Polonnaruwa">
+      <div class="dest-card-overlay"></div>
+      <div class="dest-card-content">
+        <div class="dest-card-category">Ancient City</div>
+        <div class="dest-card-name">Polonnaruwa</div>
+        <div class="dest-card-region">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.75 3.5 6.5 3.5 6.5s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z" stroke="currentColor" stroke-width="1.2"/></svg>
+          North Central Province
+        </div>
+        <div class="dest-card-footer">
+          <div class="dest-card-highlights">
+            <span class="highlight-chip">Ruins</span>
+            <span class="highlight-chip">UNESCO</span>
+          </div>
+          <button class="dest-card-btn">View Details</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-img-wrap">
+      <img class="modal-img" id="modalImg" src="" alt="">
+      <div class="modal-img-overlay"></div>
+      <div class="modal-img-title">
+        <div class="modal-img-category" id="modalCat"></div>
+        <div class="modal-img-name" id="modalName"></div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-tags" id="modalTags"></div>
+      <p class="modal-desc" id="modalDesc"></p>
+      <div class="modal-info-grid">
+        <div class="modal-info-item">
+          <div class="modal-info-label">Best Time</div>
+          <div class="modal-info-val" id="modalTime"></div>
+        </div>
+        <div class="modal-info-item">
+          <div class="modal-info-label">From</div>
+          <div class="modal-info-val" id="modalDist"></div>
+        </div>
+        <div class="modal-info-item">
+          <div class="modal-info-label">Ideal Duration</div>
+          <div class="modal-info-val" id="modalDur"></div>
+        </div>
+      </div>
+      <div class="modal-packages-title">Available in Packages</div>
+      <div class="modal-packages" id="modalPkgs"></div>
+      <div class="modal-cta">
+        <a href="package-builder.html" class="btn-primary">Build a Package</a>
+        <button class="btn-ghost" onclick="closeModal()">
+          ← Back to Destinations
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer-mini">
+  <div class="footer-mini-logo">Build<span>My</span>trip</div>
+  <div class="footer-mini-text">© 2024 BuildMyTrip. All rights reserved.</div>
+  <a href="index.html" style="font-size:12px;color:var(--muted);text-decoration:none;letter-spacing:0.1em;">← Back to Home</a>
+</footer>
+
+<script>
+  // Cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  (function animCursor() {
+    cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+    rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(animCursor);
+  })();
+  document.querySelectorAll('a,button,.dest-card').forEach(el => {
+    el.addEventListener('mouseenter', () => { cursor.style.width='16px'; cursor.style.height='16px'; ring.style.width='52px'; ring.style.height='52px'; });
+    el.addEventListener('mouseleave', () => { cursor.style.width='10px'; cursor.style.height='10px'; ring.style.width='36px'; ring.style.height='36px'; });
+  });
+
+  // Scroll fade in
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+
+  // Filter
+  function filterDest(cat, btn) {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    const cards = document.querySelectorAll('.dest-card');
+    let count = 0;
+    cards.forEach(c => {
+      const match = cat === 'all' || c.dataset.cat === cat;
+      c.style.display = match ? '' : 'none';
+      if(match) count++;
+    });
+    document.getElementById('dest-count').textContent = count;
+  }
+
+  // Destination data
+  const destData = {
+    sigiriya: {
+      name: 'Sigiriya', cat: 'Cultural Heritage',
+      img: 'assets/images/destinations/sigiriya.jpg',
+      tags: ['UNESCO World Heritage', 'Rock Fortress', 'Ancient City', '5th Century'],
+      desc: 'Rising 200 meters above the surrounding jungle, Sigiriya is an ancient rock fortress built by King Kashyapa in the 5th century. Home to stunning frescoes, water gardens, and breathtaking panoramic views. One of the best preserved examples of ancient urban planning in the world.',
+      time: 'Dec – Apr', dist: 'Colombo 167km', dur: 'Half–Full Day',
+      pkgs: ['Cultural Triangle Explorer', 'Island Grand Tour']
+    },
+    ella: {
+      name: 'Ella', cat: 'Hill Country',
+      img: 'assets/images/destinations/ella.jpg',
+      tags: ['Nine Arches Bridge', 'Tea Country', 'Hiking', 'Scenic Train'],
+      desc: 'Nestled in the misty highlands at 1,041m elevation, Ella is famous for its dramatic landscapes, the iconic Nine Arches Bridge, and the scenic train journey from Kandy. Perfect for hikers, nature lovers, and those who love waking up in the clouds.',
+      time: 'Jan – Apr', dist: 'Colombo 200km', dur: '2–3 Days',
+      pkgs: ['Tea Trails & Highlands', 'Island Grand Tour']
+    },
+    mirissa: {
+      name: 'Mirissa', cat: 'Beach',
+      img: 'assets/images/destinations/mirissa.jpg',
+      tags: ['Whale Watching', 'Surfing', 'Blue Whales', 'Nightlife'],
+      desc: 'Mirissa is the crown jewel of Sri Lanka\'s southern coast — a crescent beach flanked by swaying palms. From November to April it becomes the world\'s premier blue whale watching destination. The surf is perfect, the sunsets are legendary.',
+      time: 'Nov – Apr', dist: 'Colombo 154km', dur: '2–4 Days',
+      pkgs: ['Southern Coast Escape', 'Island Grand Tour']
+    },
+    kandy: {
+      name: 'Kandy', cat: 'Cultural',
+      img: 'assets/images/destinations/kandy.jpg',
+      tags: ['Temple of Tooth', 'UNESCO', 'Perahera Festival', 'Botanical Garden'],
+      desc: 'The last royal capital of Sri Lanka, Kandy sits in a dramatic mountain setting around a central lake. Home to the revered Temple of the Tooth Relic, the Royal Botanical Gardens at Peradeniya, and vibrant Kandyan cultural performances.',
+      time: 'All Year', dist: 'Colombo 115km', dur: '1–2 Days',
+      pkgs: ['Cultural Triangle Explorer', 'Tea Trails & Highlands', 'Island Grand Tour']
+    },
+    yala: {
+      name: 'Yala National Park', cat: 'Wildlife',
+      img: 'assets/images/destinations/yala.jpg',
+      tags: ['Leopards', 'Elephants', 'Safari', 'Crocodiles', 'Peacocks'],
+      desc: 'Yala is Sri Lanka\'s most visited national park and one of the best places in the world to spot leopards in the wild. Covering 979 sq km of diverse ecosystems, Yala is also home to elephants, sloth bears, crocodiles, and over 200 bird species.',
+      time: 'Feb – Jul', dist: 'Colombo 300km', dur: '1–2 Days',
+      pkgs: ['Wild Sri Lanka', 'Island Grand Tour']
+    },
+    galle: {
+      name: 'Galle Fort', cat: 'Heritage',
+      img: 'assets/images/destinations/galle.jpg',
+      tags: ['Dutch Fort', 'UNESCO', 'Colonial', 'Lighthouse', 'Boutique Stays'],
+      desc: 'Built by the Portuguese and later fortified by the Dutch in the 17th century, Galle Fort is a UNESCO World Heritage site that uniquely blends European colonial architecture with South Asian traditions. Its cobblestone streets, boutique hotels, and ocean views are unforgettable.',
+      time: 'Dec – Apr', dist: 'Colombo 129km', dur: '1–2 Days',
+      pkgs: ['Southern Coast Escape', 'Island Grand Tour']
+    },
+    nuwara: {
+      name: 'Nuwara Eliya', cat: 'Hill Country',
+      img: 'assets/images/destinations/nuwara-eliya.jpg',
+      tags: ['Tea Estates', 'Cool Climate', 'Little England', 'Waterfalls'],
+      desc: 'At 1,868m above sea level, Nuwara Eliya is Sri Lanka\'s highest town — known as "Little England" for its colonial bungalows, manicured gardens, and cool misty climate. Surrounded by endless green tea estates, it\'s the heart of Ceylon tea country.',
+      time: 'Jan – Apr', dist: 'Colombo 180km', dur: '1–2 Days',
+      pkgs: ['Tea Trails & Highlands', 'Island Grand Tour']
+    },
+    anuradhapura: {
+      name: 'Anuradhapura', cat: 'Ancient City',
+      img: 'assets/images/destinations/anuradhapura.jpg',
+      tags: ['Sacred City', 'UNESCO', 'Dagobas', 'Bo Tree', '4th Century BC'],
+      desc: 'One of the oldest continuously inhabited cities in the world, Anuradhapura was Sri Lanka\'s first ancient capital. The city is home to towering dagobas, the sacred Sri Maha Bodhi tree (2,300+ years old), and some of the most impressive ruins in South Asia.',
+      time: 'Dec – Apr', dist: 'Colombo 205km', dur: '1–2 Days',
+      pkgs: ['Cultural Triangle Explorer', 'Island Grand Tour']
+    },
+    trinco: {
+      name: 'Trincomalee', cat: 'Beach',
+      img: 'assets/images/destinations/trincomalee.jpg',
+      tags: ['Natural Harbor', 'Diving', 'Whale Watching', 'Hot Springs'],
+      desc: 'Trincomalee boasts one of the finest natural harbors in the world and some of Sri Lanka\'s best beaches. The calm east coast waters are perfect for snorkeling and diving, while Pigeon Island Marine National Park offers spectacular coral reefs.',
+      time: 'Apr – Sep', dist: 'Colombo 257km', dur: '2–3 Days',
+      pkgs: ['Island Grand Tour']
+    },
+    udawalawe: {
+      name: 'Udawalawe', cat: 'Wildlife',
+      img: 'assets/images/destinations/udawalawe.jpg',
+      tags: ['Elephant Herds', 'Safari', 'Bird Watching', 'Reservoir'],
+      desc: 'Udawalawe National Park is renowned for its large resident population of wild elephants — one of the best places in Asia to observe elephant herds in their natural habitat. The open grasslands and reservoir make wildlife spotting exceptionally easy.',
+      time: 'All Year', dist: 'Colombo 165km', dur: 'Half–Full Day',
+      pkgs: ['Wild Sri Lanka', 'Island Grand Tour']
+    },
+    weligama: {
+      name: 'Weligama', cat: 'Beach',
+      img: 'assets/images/destinations/weligama.jpg',
+      tags: ['Stilt Fishing', 'Surfing', 'Beginner Surf', 'Seafood'],
+      desc: 'Weligama\'s wide, gentle bay is perfect for beginner surfers and those looking for a laid-back beach escape. Famous for its iconic stilt fishermen, fresh seafood, and the nearby Taprobane Island — a private island you can walk to at low tide.',
+      time: 'Nov – Apr', dist: 'Colombo 143km', dur: '1–2 Days',
+      pkgs: ['Southern Coast Escape', 'Island Grand Tour']
+    },
+    polonnaruwa: {
+      name: 'Polonnaruwa', cat: 'Ancient City',
+      img: 'assets/images/destinations/polonnaruwa.jpg',
+      tags: ['Medieval Capital', 'UNESCO', 'Rock Sculptures', 'Ruins'],
+      desc: 'Sri Lanka\'s second ancient kingdom, Polonnaruwa is home to some of the best preserved ruins in Asia. The magnificent Gal Vihara rock temple with its giant Buddha sculptures, the Royal Palace complex, and the ancient irrigation system are must-sees.',
+      time: 'Dec – Apr', dist: 'Colombo 216km', dur: 'Full Day',
+      pkgs: ['Cultural Triangle Explorer', 'Island Grand Tour']
+    }
+  };
+
+  function openModal(id) {
+    const d = destData[id];
+    if(!d) return;
+    document.getElementById('modalImg').src = d.img;
+    document.getElementById('modalCat').textContent = d.cat;
+    document.getElementById('modalName').textContent = d.name;
+    document.getElementById('modalDesc').textContent = d.desc;
+    document.getElementById('modalTime').textContent = d.time;
+    document.getElementById('modalDist').textContent = d.dist;
+    document.getElementById('modalDur').textContent = d.dur;
+    document.getElementById('modalTags').innerHTML = d.tags.map(t => `<span class="modal-tag">${t}</span>`).join('');
+    document.getElementById('modalPkgs').innerHTML = d.pkgs.map(p => `<span class="modal-pkg-chip">${p}</span>`).join('');
+    document.getElementById('modalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function closeModalOutside(e) {
+    if(e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>
